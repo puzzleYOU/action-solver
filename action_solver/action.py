@@ -1,5 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
+from typing import Self, final
 
 
 class Action(ABC):
@@ -79,6 +80,25 @@ class Action(ABC):
 
         self._state: SolverState = state
 
+    @property
+    def dependent_actions(self) -> list[type[Self]]:
+        return []
+
+    @property
+    @final
+    def dependent_results(self) -> list[type[Result]]:
+        return [T.Result for T in self.dependent_actions]
+
+    def get_global(self, key: str) -> object:
+        return self._state.globals[key]
+
+    def get_result[TResult: Result](
+        self, result_type: type[TResult]
+    ) -> TResult:
+        if result_type not in self.dependent_results:
+            raise MissingDependencyDeclarationException()
+        return self._state.get_result(result_type)
+
     def invoke(self, dry_run: bool) -> Result:
         self._log(self._format_heading(dry_run))
         result = self._dry_run_impl() if dry_run else self._production_impl()
@@ -108,3 +128,12 @@ class Action(ABC):
 class VoidResult(Action.Result):
     def __init__(self):
         pass
+
+
+class MissingDependencyDeclarationException(Exception):
+    def __init__(self, from_action: type[Action], to_action: type[Action]):
+        super().__init__(
+            f"could not resolve result: {from_action} is not declared "
+            f"as dependency of {to_action}. Did you forget to extend "
+            "Action property `dependent_actions`?"
+        )

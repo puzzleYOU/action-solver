@@ -8,13 +8,14 @@ from .state import SolverState
 
 
 class ActionSolverFactory:
-    def __init__(self, dry_run: bool):
+    def __init__(self, dry_run: bool = False):
         """
         Creates a new factory instance for constructing an :`ActionSolver`.
 
         Parameters:
         - dry_run (bool): Whether the dry-run ("simulation") or actual logic
-          should be executed when calling the actual solver.
+          should be executed when calling the actual solver. Defaults to
+          `False` (actual logic).
         """
         self._graph = Graph(directed=True)
         self._actions = []
@@ -37,6 +38,12 @@ class ActionSolverFactory:
         self._add_to_known_actions_and_graph(action)
         self._add_to_known_actions_and_graph(depends_on)
         self._add_edge(depends_on, action)
+        return self
+
+    def add_dependencies_from(self, action: type[Action]) -> Self:
+        """
+        Transitively adds dependencies from `action`'s result dependencies.
+        """
         return self
 
     def bind_globals(self, **kwargs) -> Self:

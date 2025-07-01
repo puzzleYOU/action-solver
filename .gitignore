@@ -194,4 +194,7 @@ cython_debug/
 .cursorindexingignore
 
 # vscode
-.vscode
+/.vscode
+
+# direnv
+/.direnv

@@ -1,0 +1,13 @@
+[project]
+name = "action-solver"
+description = "a library helping to structure complex code"
+version = "0.1.0"
+
+author = "puzzleYOU GmbH"
+url = "https://github.com/puzzleYOU/action-solver/"
+readme = "README.rst"
+license = "MIT"
+
+dependencies = [
+  "igraph",
+]
