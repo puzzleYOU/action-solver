@@ -18,7 +18,7 @@ class ActionSolverFactory:
           `False` (actual logic).
         """
         self._graph = Graph(directed=True)
-        self._actions = []
+        self._actions: list[type[Action]] = []
         self._dry_run = dry_run
         self._state = SolverState.construct_empty()
 
@@ -45,7 +45,7 @@ class ActionSolverFactory:
         """
         return self
 
-    def bind_globals(self, **kwargs) -> Self:
+    def bind_globals(self, **kwargs: dict[str, object]) -> Self:
         """
         Binds :class:`SolverState` globals (variables visible to all actions).
         """
@@ -67,7 +67,9 @@ class ActionSolverFactory:
             self._actions.index(to_action),
         )
 
-    def into_solver(self, solver_class: type[ActionSolver]) -> ActionSolver:
+    def into_solver[TSolver: ActionSolver[Action.Result]](
+        self, solver_class: type[TSolver]
+    ) -> TSolver:
         """
         Constructs a new :class:`ActionSolver`.
         """
