@@ -20,7 +20,6 @@ class ActionSolverFactory:
         self._graph = Graph(directed=True)
         self._actions = []
         self._dry_run = dry_run
-        self._parameters = {}
         self._state = SolverState.construct_empty()
 
     def add_dependency(
