@@ -1,4 +1,4 @@
-from typing import Self
+from typing import Any, Self
 
 from igraph import Graph
 
@@ -7,7 +7,7 @@ from .solver import ActionSolver
 from .state import SolverState
 
 
-class ActionSolverFactory:
+class ActionSolverFactory[TFinalResult: Action.Result]:
     def __init__(self, dry_run: bool = False):
         """
         Creates a new factory instance for constructing an :`ActionSolver`.
@@ -45,7 +45,7 @@ class ActionSolverFactory:
         """
         return self
 
-    def bind_globals(self, **kwargs: dict[str, object]) -> Self:
+    def bind_globals(self, **kwargs: Any) -> Self:
         """
         Binds :class:`SolverState` globals (variables visible to all actions).
         """
@@ -67,9 +67,9 @@ class ActionSolverFactory:
             self._actions.index(to_action),
         )
 
-    def into_solver[TSolver: ActionSolver[Action.Result]](
-        self, solver_class: type[TSolver]
-    ) -> TSolver:
+    def into_solver[TSolver: ActionSolver[TFinalResult]](
+        self, solver_class: type[ActionSolver[TFinalResult]]
+    ) -> ActionSolver[TFinalResult]:
         """
         Constructs a new :class:`ActionSolver`.
         """

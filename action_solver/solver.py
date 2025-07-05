@@ -1,5 +1,8 @@
+# NOTE this code is full of 'type: ignore' as igraph stubs are just
+# broken. as we will rewrite this part in C(++) or Rust using CPython/Swig
+# or PyO3 this should not bother much.
+
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 
 from igraph import Graph
 
@@ -7,7 +10,6 @@ from .action import Action, VoidResult
 from .state import SolverState
 
 
-@dataclass(frozen=True)
 class ActionSolver[TFinalResult: Action.Result](ABC):
     """
     Base class for solving actions in the right order.
@@ -20,22 +22,30 @@ class ActionSolver[TFinalResult: Action.Result](ABC):
       solver implementations.
     """
 
-    graph: Graph
-    actions: list[type[Action]]
-    dry_run: bool
-    state: SolverState
+    def __init__(
+        self,
+        graph: Graph,
+        actions: list[type[Action]],
+        dry_run: bool,
+        state: SolverState,
+    ):
+        self._graph = graph
+        self._actions = actions
+        self._dry_run = dry_run
+        self._state = state
 
-    def __post_init__(self):
-        if not self.graph.is_dag():
+        # NOTE returns bool. just trust it exists. type stub doesn't know.
+        if not self._graph.is_dag():  # type: ignore
             raise ValueError("graph must not have any cycle")
         if self._graph_has_leaf_nodes():
             raise ValueError("graph must be connected")
 
     def _graph_has_leaf_nodes(self):
+        # NOTE just trust this code. same rant as above regarding type stub
         return any(
             map(
-                lambda vertex: len(vertex.all_edges()) == 0,
-                self.graph.vs,
+                lambda vertex: len(vertex.all_edges()) == 0,  # type: ignore
+                self._graph.vs,  # type: ignore
             )
         )
 
@@ -47,10 +57,10 @@ class ActionSolver[TFinalResult: Action.Result](ABC):
         pass
 
     def _apply_step(self, ordinal: int) -> Action.Result:
-        action_class = self.actions[ordinal]
-        action = action_class(self.state)
-        result = action.invoke(self.dry_run)
-        self.state.results[result.__class__] = result
+        action_class = self._actions[ordinal]
+        action = action_class(self._state)
+        result = action.invoke(self._dry_run)
+        self._state.results[result.__class__] = result
         return result
 
 
@@ -68,7 +78,11 @@ class SequentialExecutionActionSolver[TFinalResult: Action.Result](
         final_result_type: type[TFinalResult] = VoidResult,
     ) -> TFinalResult:
         final_result = VoidResult()
-        for ordinal in self.graph.topological_sorting():
+        # TODO this per-step assert is hopefully optimized away in production
+        # or after cleanly rewriting solver interface in idk whatever lang
+        # we should not need anymore
+        for ordinal in self._graph.topological_sorting():  # type: ignore
+            assert isinstance(ordinal, int)
             final_result = self._apply_step(ordinal)
         if not isinstance(final_result, final_result_type):
             raise TypeError(

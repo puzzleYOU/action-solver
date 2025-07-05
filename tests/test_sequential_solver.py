@@ -51,11 +51,11 @@ class ReverseDigits(Action):
 
 class SequentialSolverTests(unittest.TestCase):
     def test_full_run(self):
-        solver = (
+        solver: SequentialExecutionActionSolver[ReverseDigits.Result] = (
             ActionSolverFactory()
             .bind_globals(a=4, b=2)
             .add_dependencies_from(ReverseDigits)
-            .into_solver(solver_class=SequentialExecutionActionSolver)
+            .into_solver(solver_class=SequentialExecutionActionSolver[ReverseDigits.Result])
         )
         self.assertEqual(
             ReverseDigits.Result(reversed_number="042"),

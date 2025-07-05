@@ -75,10 +75,29 @@ class Action(ABC):
         @abstractmethod
         def __init__(self): ...
 
-    def __init__(self, state):
+    def __init__(self, state: object):
+        # NOTE due to circular module interdependencies we cannot expose
+        # 'SolverState' to signature. therefore we manually check the type
         from action_solver import SolverState
 
+        if not isinstance(state, SolverState):
+            self._raise_type_error(
+                exp_class=SolverState, act_class=state.__class__
+            )
+            
         self._state: SolverState = state
+        self._logger: logging.Logger | None = self._unwrap_logger()
+
+    def _raise_type_error(self, exp_class: type, act_class: type):
+        raise TypeError(f"'state' must be '{exp_class}', got {act_class}")
+
+    def _unwrap_logger(self) -> logging.Logger | None:
+        logger = self._state.globals.get("logger")
+        if not isinstance(logger, logging.Logger):
+            self._raise_type_error(
+                exp_class=logging.Logger, act_class=logger.__class__
+            )
+        return logger
 
     @property
     def dependent_actions(self) -> list[type[Self]]:
@@ -96,7 +115,9 @@ class Action(ABC):
         self, result_type: type[TResult]
     ) -> TResult:
         if result_type not in self.dependent_results:
-            raise MissingDependencyDeclarationException()
+            raise MissingDependencyDeclarationException(
+                self.__class__, result_type
+            )
         return self._state.get_result(result_type)
 
     def invoke(self, dry_run: bool) -> Result:
@@ -119,10 +140,9 @@ class Action(ABC):
             heading += " (dry run)"
         return heading
 
-    def _log(self, msg: str, level=logging.INFO):
-        logger: logging.Logger | None = self._state.globals.get("logger")
-        if logger:
-            logger.log(level, msg)
+    def _log(self, msg: str, level: int = logging.INFO):
+        if self._logger:
+            self._logger.log(level, msg)
 
 
 class VoidResult(Action.Result):
@@ -131,9 +151,8 @@ class VoidResult(Action.Result):
 
 
 class MissingDependencyDeclarationException(Exception):
-    def __init__(self, from_action: type[Action], to_action: type[Action]):
+    def __init__(self, from_action: type[Action], to_result: type[Action.Result]):
         super().__init__(
-            f"could not resolve result: {from_action} is not declared "
-            f"as dependency of {to_action}. Did you forget to extend "
-            "Action property `dependent_actions`?"
+            f"could not resolve result: {from_action} depends on {to_result}. "
+            "Did you forget to extend 'Action.dependent_actions'?"
         )
