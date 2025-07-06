@@ -3,7 +3,7 @@
 # or PyO3 this should not bother much.
 
 from abc import ABC, abstractmethod
-from typing import Self
+from typing import Self, Sequence
 
 from igraph import Graph
 
@@ -37,7 +37,7 @@ class ActionSolver[TFinalResult: Action.Result](ABC):
     def __init__(
         self,
         graph: Graph,
-        actions: list[type[Action]],
+        actions: Sequence[type[Action]],
         dry_run: bool,
         state: SolverState,
         result: type[TFinalResult],
