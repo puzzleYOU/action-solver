@@ -1,10 +1,10 @@
 from .action import Action, VoidResult
-from .factory import ActionSolverFactory
+from .builder import ActionSolverBuilder
 from .state import SolverState
 
 __all__ = [
     "Action",
-    "ActionSolverFactory",
+    "ActionSolverBuilder",
     "SolverState",
     "VoidResult",
 ]
