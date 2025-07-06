@@ -27,6 +27,9 @@ class SolverState:
     def construct_empty(cls) -> Self:
         return cls(globals={}, results={})
 
+    def get_global(self, key: str) -> object:
+        return self._globals[key]
+    
     def get_result[TResult: Action.Result](
         self, result_type: type[TResult]
     ) -> TResult:
