@@ -93,20 +93,20 @@ class Action(ABC):
 
     def _unwrap_logger(self) -> logging.Logger | None:
         logger = self._state.globals.get("logger")
-        if not isinstance(logger, logging.Logger):
+        if logger is not None and not isinstance(logger, logging.Logger):
             self._raise_type_error(
                 exp_class=logging.Logger, act_class=logger.__class__
             )
         return logger
 
-    @property
-    def dependent_actions(self) -> list[type[Self]]:
+    @classmethod
+    def get_dependent_actions(cls) -> list[type[Self]]:
         return []
 
-    @property
     @final
-    def dependent_results(self) -> list[type[Result]]:
-        return [T.Result for T in self.dependent_actions]
+    @classmethod
+    def get_dependent_results(cls) -> list[type[Result]]:
+        return [T.Result for T in cls.get_dependent_actions()]
 
     def get_global(self, key: str) -> object:
         return self._state.globals[key]
@@ -114,7 +114,7 @@ class Action(ABC):
     def get_result[TResult: Result](
         self, result_type: type[TResult]
     ) -> TResult:
-        if result_type not in self.dependent_results:
+        if result_type not in self.get_dependent_results():
             raise MissingDependencyDeclarationException(
                 self.__class__, result_type
             )
@@ -153,6 +153,6 @@ class VoidResult(Action.Result):
 class MissingDependencyDeclarationException(Exception):
     def __init__(self, from_action: type[Action], to_result: type[Action.Result]):
         super().__init__(
-            f"could not resolve result: {from_action} depends on {to_result}. "
-            "Did you forget to extend 'Action.dependent_actions'?"
+            f"Couldn't resolve dependency {to_result}. Possible "
+            f"fix: extend '{from_action.__name__}.get_dependent_actions()'"
         )
