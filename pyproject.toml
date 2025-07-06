@@ -1,12 +1,30 @@
 [project]
 name = "action-solver"
-description = "a library helping to structure complex code"
 version = "0.1.0"
-#author = "puzzleYOU GmbH"
-#url = "https://github.com/puzzleYOU/action-solver/"
-readme = "README.rst"
+description = "a library helping to structure complex code"
 license = "MIT"
 
 dependencies = [
-  "igraph",
+  "igraph~=0.11",
+  "cython<4"
 ]
+
+[tools.setuptool]
+packages = ["action_solver"]
+authors = [
+    {name = "puzzleYOU GmbH"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[tool.poetry]
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.12.2"
+mypy = "^1.16.1"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
